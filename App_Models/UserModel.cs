@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Web;
 
-namespace CuboFullStackChallenge.Models
+namespace CuboFullStackChallenge.App_Models
 {
     [Table("Users")]
     public class UserModel
