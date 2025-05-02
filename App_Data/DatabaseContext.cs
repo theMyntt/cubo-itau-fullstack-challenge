@@ -10,7 +10,7 @@ namespace CuboFullStackChallenge.App_Data
 {
     public class DatabaseContext : DbContext
     {
-        public DbSet<UserModel> Users { get; protected set; }
+        public DbSet<UserModel> Users { get; set; }
 
         public DatabaseContext()
             : base(ConfigurationManager.ConnectionStrings["SqlServer"].ConnectionString)
