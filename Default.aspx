@@ -138,7 +138,7 @@
                                     <tr>
                                         <td> <%# Eval("FirstName") %> </td>
                                         <td> <%# Eval("LastName") %> </td>
-                                        <td> <%# Eval("Participation") %> </td>
+                                        <td> <%# Eval("Participation") %>% </td>
                                     </tr>
                                 </ItemTemplate>
                             </asp:Repeater>
@@ -167,9 +167,11 @@
                     label: 'Participation',
                     data: participation,
                     backgroundColor: [
-                        'rgb(255, 99, 132)',
-                        'rgb(54, 162, 235)',
-                        'rgb(255, 205, 86)'
+                        'red',
+                        'blue',
+                        'yellow',
+                        'green',
+                        'limegreen'
                     ],
                     hoverOffset: 4
                 }]
