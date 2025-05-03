@@ -175,6 +175,9 @@
                     ],
                     hoverOffset: 4
                 }]
+            },
+            options: {
+                animation: false
             }
         });
     </script>
