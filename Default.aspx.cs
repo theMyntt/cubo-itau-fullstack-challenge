@@ -8,7 +8,6 @@ using System.Web.UI;
 using System.Web.UI.WebControls;
 using CuboFullStackChallenge.App_Data;
 using CuboFullStackChallenge.App_Models;
-using Newtonsoft.Json;
 
 namespace CuboFullStackChallenge
 {
@@ -20,12 +19,20 @@ namespace CuboFullStackChallenge
         {
             if (!IsPostBack)
             {
-                using (var context = new DatabaseContext())
+                if (Session["ErrorMessage"] != null)
                 {
-                    Users = await context.Users.ToListAsync();
-                    var usersJson = new JavaScriptSerializer().Serialize(Users);
-                    ClientScript.RegisterStartupScript(GetType(), "script", $"var users = {usersJson}", true);
+                    Toastr.Visible = true;
+                    CreationFormValidator.Text = Session["ErrorMessage"].ToString();
+                    Session.Remove("ErrorMessage");
                 }
+            }
+
+            using (var context = new DatabaseContext())
+            {
+                Users = await context.Users.ToListAsync();
+                var usersJson = new JavaScriptSerializer().Serialize(Users);
+                ClientScript.RegisterStartupScript(GetType(), "script", $"var users = {usersJson};", true);
+
                 InsightsTable.DataSource = Users;
                 InsightsTable.DataBind();
             }
@@ -34,26 +41,24 @@ namespace CuboFullStackChallenge
         protected async void Send_Form(object sender, EventArgs e)
         {
             // Validate Entries
-            if (FirstNameInput.Text == string.Empty)
+            if (string.IsNullOrWhiteSpace(FirstNameInput.Text))
             {
-                Toastr.Visible = true;
-                CreationFormValidator.Text = "First name cant be null";
+                Session["ErrorMessage"] = "First name can't be null";
+                Response.Redirect(Request.RawUrl, false);
                 return;
             }
-            if (LastNameInput.Text == string.Empty)
+            if (string.IsNullOrWhiteSpace(LastNameInput.Text))
             {
-                Toastr.Visible = true;
-                CreationFormValidator.Text = "Last name cant be null";
+                Session["ErrorMessage"] = "Last name can't be null";
+                Response.Redirect(Request.RawUrl, false);
                 return;
             }
-            if (ParticipationInput.Text == string.Empty)
+            if (string.IsNullOrWhiteSpace(ParticipationInput.Text))
             {
-                Toastr.Visible = true;
-                CreationFormValidator.Text = "Participation cant be null";
+                Session["ErrorMessage"] = "Participation can't be null";
+                Response.Redirect(Request.RawUrl, false);
                 return;
             }
-
-            Toastr.Visible = false;
 
             // Prepare User
             var user = new UserModel
@@ -63,19 +68,30 @@ namespace CuboFullStackChallenge
                 Participation = int.Parse(ParticipationInput.Text)
             };
 
-            // Reset Form
-            FirstNameInput.Text = string.Empty;
-            LastNameInput.Text = string.Empty;
-            ParticipationInput.Text = string.Empty;
-
-            // Persist User
+            // Validate user and persis them
             using (var context = new DatabaseContext())
             {
+                var list = await context.Users.ToListAsync();
+                var totalParticipation = list.Sum(u => u.Participation);
+
+                if (totalParticipation >= 100)
+                {
+                    Session["ErrorMessage"] = "Participation is already 100%";
+                    Response.Redirect(Request.RawUrl, false);
+                    return;
+                }
+                if (totalParticipation + user.Participation > 100)
+                {
+                    Session["ErrorMessage"] = "Invalid participation: total will exceed 100%";
+                    Response.Redirect(Request.RawUrl, false);
+                    return;
+                }
+
                 context.Users.Add(user);
                 await context.SaveChangesAsync();
             }
 
-            Response.Redirect(Request.RawUrl);
+            Response.Redirect(Request.RawUrl, false);
         }
 
         protected void Close_Toastr(object sender, EventArgs e)
